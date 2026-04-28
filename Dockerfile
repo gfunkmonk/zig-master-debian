@@ -42,7 +42,7 @@ RUN find /output -type f -exec sed -i \
 
 # Generate Manpage from langref
 # Fix: html2text is the binary provided by python3-html2text
-RUN html2text "/opt/zig-x86_64-linux-$ZIG_VERSION/doc/langref.html" > /output/usr/share/man/man1/zig-master.md && \
+RUN python3 -m html2text "/opt/zig-x86_64-linux-$ZIG_VERSION/doc/langref.html" > /output/usr/share/man/man1/zig-master.md && \
     pandoc -s -t man -o /output/usr/share/man/man1/zig-master.1 /output/usr/share/man/man1/zig-master.md && \
     rm /output/usr/share/man/man1/zig-master.md && \
     gzip -n -9 /output/usr/share/man/man1/zig-master.1

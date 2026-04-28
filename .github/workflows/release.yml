@@ -23,8 +23,11 @@ jobs:
       - name: Checkout zig-debian
         uses: actions/checkout@v6
 
-      - name: Build zig
+      - name: Build zig Debian
         run: ./build_zig_debian.sh ${{ inputs.zig_version }} ${{ inputs.build_version }}
+
+      - name: Build zig Ubuntu
+        run: ./build_zig_ubuntu.sh ${{ inputs.zig_version }} ${{ inputs.build_version }}
       
       - name: Upload Artifact
         uses: actions/upload-artifact@v7

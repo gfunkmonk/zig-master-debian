@@ -6,53 +6,48 @@ ARG DEBIAN_DIST
 ARG BUILD_VERSION
 ARG FULL_VERSION
 
-RUN apt update && apt install -y build-essential pandoc python3-html2text wget 
-RUN wget -q "https://ziglang.org/builds/zig-x86_64-linux-$ZIG_VERSION.tar.xz" && tar -xf "zig-x86_64-linux-$ZIG_VERSION.tar.xz" -C /opt && rm "zig-x86_64-linux-$ZIG_VERSION.tar.xz"
-RUN mkdir -p /output/usr/lib/zig/master
-RUN cp "/opt/zig-x86_64-linux-$ZIG_VERSION/zig" /output/usr/lib/zig/master/
-RUN cp -r "/opt/zig-x86_64-linux-$ZIG_VERSION/lib" /output/usr/lib/zig/master/
+# Install build dependencies
+RUN apt update && apt install -y --no-install-recommends \
+    build-essential pandoc python3-html2text wget ca-certificates gzip && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /output/DEBIAN
-RUN mkdir -p /output/usr/share/doc/zig-master/
-RUN mkdir -p /output/usr/share/man/man1/
+# Download and extract Zig
+RUN wget -q "https://ziglang.org/builds/zig-x86_64-linux-$ZIG_VERSION.tar.xz" && \
+    tar -xf "zig-x86_64-linux-$ZIG_VERSION.tar.xz" -C /opt && \
+    rm "zig-x86_64-linux-$ZIG_VERSION.tar.xz"
 
-COPY output/DEBIAN/control /output/DEBIAN/
-COPY output/DEBIAN/postinst /output/DEBIAN/
-COPY output/DEBIAN/prerm /output/DEBIAN/
-COPY output/DEBIAN/postrm /output/DEBIAN/
-RUN chmod 755 /output/DEBIAN/postinst
-RUN chmod 755 /output/DEBIAN/prerm
-RUN chmod 755 /output/DEBIAN/postrm
+# Setup Directory Structure
+RUN mkdir -p /output/usr/lib/zig/master \
+             /output/DEBIAN \
+             /output/usr/share/doc/zig-master/ \
+             /output/usr/share/man/man1/
 
+# Copy Binaries and Libs
+RUN cp "/opt/zig-x86_64-linux-$ZIG_VERSION/zig" /output/usr/lib/zig/master/ && \
+    cp -r "/opt/zig-x86_64-linux-$ZIG_VERSION/lib" /output/usr/lib/zig/master/
+
+# Copy Maintainer Scripts
+COPY output/DEBIAN/ /output/DEBIAN/
+RUN chmod 755 /output/DEBIAN/postinst /output/DEBIAN/prerm /output/DEBIAN/postrm
+
+# Copy Docs
 COPY output/changelog.Debian /output/usr/share/doc/zig-master/changelog.Debian
 COPY output/copyright /output/usr/share/doc/zig-master/
 
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/usr/share/doc/zig-master/changelog.Debian
-RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/usr/share/doc/zig-master/changelog.Debian
-RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/usr/share/doc/zig-master/changelog.Debian
+# Unified Template Replacement
+RUN find /output -type f -exec sed -i \
+    -e "s/DIST/$DEBIAN_DIST/g" \
+    -e "s/BUILD_VERSION/$BUILD_VERSION/g" \
+    -e "s/ZIG_VERSION/$ZIG_VERSION/g" {} +
 
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/DEBIAN/control
-RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/DEBIAN/control
-RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/DEBIAN/control
+# Generate Manpage from langref
+# Fix: html2text is the binary provided by python3-html2text
+RUN html2text "/opt/zig-x86_64-linux-$ZIG_VERSION/doc/langref.html" > /output/usr/share/man/man1/zig-master.md && \
+    pandoc -s -t man -o /output/usr/share/man/man1/zig-master.1 /output/usr/share/man/man1/zig-master.md && \
+    rm /output/usr/share/man/man1/zig-master.md && \
+    gzip -n -9 /output/usr/share/man/man1/zig-master.1
 
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/DEBIAN/postinst
-RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/DEBIAN/postinst
-RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/DEBIAN/postinst
-
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/DEBIAN/prerm
-RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/DEBIAN/prerm
-RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/DEBIAN/prerm
-
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/DEBIAN/postrm
-RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/DEBIAN/postrm
-RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/DEBIAN/postrm
-
-RUN html2markdown "/opt/zig-x86_64-linux-$ZIG_VERSION/doc/langref.html" > /output/usr/share/man/man1/zig-master.md
-RUN pandoc -s -t man -o /output/usr/share/man/man1/zig-master.1 /output/usr/share/man/man1/zig-master.md
-RUN rm /output/usr/share/man/man1/zig-master.md
-RUN gzip -n -9 /output/usr/share/man/man1/zig-master.1
-
+# Clean up source to keep image slim (optional but good practice)
+RUN rm -rf "/opt/zig-x86_64-linux-$ZIG_VERSION"
 
 RUN dpkg-deb --build /output /zig-master_${FULL_VERSION}.deb
-
-

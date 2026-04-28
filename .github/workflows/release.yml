@@ -44,9 +44,11 @@ jobs:
           name: debian-packages
 
       - name: Publish Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
-          draft: true
+          prerelease: false
+          draft: false
+          make_latest: true
           files: "*.deb"
           name: "Zig ${{ inputs.zig_version }} (Build ${{ inputs.build_version }})"
           tag_name: "${{ inputs.zig_version }}-${{ inputs.build_version }}"

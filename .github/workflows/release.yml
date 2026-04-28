@@ -52,7 +52,7 @@ jobs:
           generate_release_notes: false
           make_latest: true
           files: zig-master_*.deb
-          name: ${{ inputs.zig_version }}+${{ inputs.build_version }}
-          tag_name: ${{ env.RELEASE_TAG }}
+          name: Zig ${{ inputs.zig_version }}+${{ inputs.build_version }}
+          tag_name: ${{ inputs.zig_version }}-${{ inputs.build_version }}
           fail_on_unmatched_files: true
-
+          

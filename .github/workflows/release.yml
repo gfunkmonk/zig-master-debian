@@ -21,33 +21,36 @@ jobs:
     runs-on: ubuntu-latest    
     steps:
       - name: Checkout zig-debian
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build zig
         run: ./build_zig_debian.sh ${{ inputs.zig_version }} ${{ inputs.build_version }}
       
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: artifact
           path: zig-master_*.deb
 
 
   release-zig:
-    name: (Draft-)Release zig for Debian
+    name: Release zig for Debian
     if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: build-zig
     steps:
       - name: Download All Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: artifact
 
-      - name: Publish Release Draft
-        uses: softprops/action-gh-release@v2
+      - name: Publish Release
+        uses: softprops/action-gh-release@v3
         with:
-          draft: true
+          prerelease: false
+          draft: false
+          generate_release_notes: false
+          make_latest: true
           files: zig-master_*.deb
           name: ${{ inputs.zig_version }}+${{ inputs.build_version }}
           tag_name: ${{ env.RELEASE_TAG }}

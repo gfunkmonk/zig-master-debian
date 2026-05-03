@@ -1,0 +1,60 @@
+name: Check for New Zig Master
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight
+  workflow_dispatch: # Allows you to manually trigger a check
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest Zig master version
+        id: zig_check
+        run: |
+          # Fetch the latest master metadata from Zig's API
+          ZIG_DATA=$(curl -s https://ziglang.org/download/index.json)
+          VERSION=$(echo "$ZIG_DATA" | jq -r '.master.version')
+          
+          # We'll use the version string as the unique identifier
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Sanitize version for tag checking (replacing + with -)
+          echo "tag_version=${VERSION//+/-}" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: tag_check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = "${{ steps.zig_check.outputs.tag_version }}";
+            try {
+              await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag: tag
+              });
+              core.setOutput("exists", "true");
+            } catch (e) {
+              core.setOutput("exists", "false");
+            }
+
+      - name: Trigger Build Workflow
+        if: steps.tag_check.outputs.exists == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'release.yml', // Ensure this matches your build filename
+              ref: 'master',
+              inputs: {
+                zig_version: "${{ steps.zig_check.outputs.version }}",
+                build_version: "1" // Defaulting to 1 for the daily dev build
+              }
+            });

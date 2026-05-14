@@ -19,10 +19,8 @@ jobs:
           # Fetch the latest master metadata from Zig's API
           ZIG_DATA=$(curl -s https://ziglang.org/download/index.json)
           VERSION=$(echo "$ZIG_DATA" | jq -r '.master.version')
-          
           # We'll use the version string as the unique identifier
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          
           # Sanitize version for tag checking (replacing + with -)
           echo "tag_version=${VERSION//+/-}" >> $GITHUB_OUTPUT
 
@@ -52,7 +50,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               workflow_id: 'release.yml', // Ensure this matches your build filename
-              ref: 'master',
+              ref: 'main',
               inputs: {
                 zig_version: "${{ steps.zig_check.outputs.version }}",
                 build_version: "1" // Defaulting to 1 for the daily dev build

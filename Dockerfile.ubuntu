@@ -1,12 +1,12 @@
-ARG DEBIAN_DIST=jammy
-FROM ubuntu:$DEBIAN_DIST
+ARG UBUNTU_DIST=noble
+FROM ubuntu:$UBUNTU_DIST
 
 ARG ZIG_VERSION
-ARG DEBIAN_DIST
+ARG UBUNTU_DIST
 ARG BUILD_VERSION
 ARG FULL_VERSION
 
-RUN apt update && apt install -y build-essential pandoc python3-html2text wget 
+RUN apt update && apt install -y build-essential pandoc python3-html2text wget
 RUN wget -q "https://ziglang.org/builds/zig-x86_64-linux-$ZIG_VERSION.tar.xz" && tar -xf "zig-x86_64-linux-$ZIG_VERSION.tar.xz" -C /opt && rm "zig-x86_64-linux-$ZIG_VERSION.tar.xz"
 RUN mkdir -p /output/usr/lib/zig/master
 RUN cp "/opt/zig-x86_64-linux-$ZIG_VERSION/zig" /output/usr/lib/zig/master/
@@ -27,23 +27,23 @@ RUN chmod 755 /output/DEBIAN/postrm
 COPY output/changelog.Debian /output/usr/share/doc/zig-master/changelog.Debian
 COPY output/copyright /output/usr/share/doc/zig-master/
 
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/usr/share/doc/zig-master/changelog.Debian
+RUN sed -i "s/DIST/$UBUNTU_DIST/" /output/usr/share/doc/zig-master/changelog.Debian
 RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/usr/share/doc/zig-master/changelog.Debian
 RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/usr/share/doc/zig-master/changelog.Debian
 
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/DEBIAN/control
+RUN sed -i "s/DIST/$UBUNTU_DIST/" /output/DEBIAN/control
 RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/DEBIAN/control
 RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/DEBIAN/control
 
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/DEBIAN/postinst
+RUN sed -i "s/DIST/$UBUNTU_DIST/" /output/DEBIAN/postinst
 RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/DEBIAN/postinst
 RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/DEBIAN/postinst
 
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/DEBIAN/prerm
+RUN sed -i "s/DIST/$UBUNTU_DIST/" /output/DEBIAN/prerm
 RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/DEBIAN/prerm
 RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/DEBIAN/prerm
 
-RUN sed -i "s/DIST/$DEBIAN_DIST/" /output/DEBIAN/postrm
+RUN sed -i "s/DIST/$UBUNTU_DIST/" /output/DEBIAN/postrm
 RUN sed -i "s/BUILD_VERSION/$BUILD_VERSION/" /output/DEBIAN/postrm
 RUN sed -i "s/ZIG_VERSION/$ZIG_VERSION/" /output/DEBIAN/postrm
 
@@ -52,7 +52,4 @@ RUN pandoc -s -t man -o /output/usr/share/man/man1/zig-master.1 /output/usr/shar
 RUN rm /output/usr/share/man/man1/zig-master.md
 RUN gzip -n -9 /output/usr/share/man/man1/zig-master.1
 
-
 RUN dpkg-deb --build /output /zig-master_${FULL_VERSION}.deb
-
-

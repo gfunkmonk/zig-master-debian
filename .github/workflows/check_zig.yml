@@ -26,7 +26,7 @@ jobs:
 
       - name: Check if tag exists
         id: tag_check
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const tag = "${{ steps.zig_check.outputs.tag_version }}";
@@ -43,7 +43,7 @@ jobs:
 
       - name: Trigger Build Workflow
         if: steps.tag_check.outputs.exists == 'false'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.actions.createWorkflowDispatch({

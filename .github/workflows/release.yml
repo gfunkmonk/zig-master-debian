@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest    
     steps:
       - name: Checkout zig-debian
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Build zig Debian
         run: ./build_zig_debian.sh ${{ inputs.zig_version }} ${{ inputs.build_version }}

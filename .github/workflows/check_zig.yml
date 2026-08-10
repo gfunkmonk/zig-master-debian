@@ -22,14 +22,14 @@ jobs:
           # We'll use the version string as the unique identifier
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           # Sanitize version for tag checking (replacing + with -)
-          echo "tag_version=${VERSION//+/-}" >> $GITHUB_OUTPUT
+          #echo "tag_version=${VERSION//+/-}" >> $GITHUB_OUTPUT
 
       - name: Check if tag exists
         id: tag_check
         uses: actions/github-script@v9
         with:
           script: |
-            const tag = "${{ steps.zig_check.outputs.tag_version }}";
+            const tag = "${{ steps.zig_check.outputs.version }}";
             try {
               await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
@@ -53,6 +53,5 @@ jobs:
               ref: 'main',
               inputs: {
                 zig_version: "${{ steps.zig_check.outputs.version }}",
-                build_version: "1" // Defaulting to 1 for the daily dev build
               }
             });

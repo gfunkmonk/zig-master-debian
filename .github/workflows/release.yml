@@ -7,10 +7,6 @@ on:
         description: The version of zig to build.
         type: string
         required: true
-      build_version:
-        description: The build version.
-        type: string
-        required: true
 
 permissions:
   contents: write
@@ -18,17 +14,17 @@ permissions:
 jobs:
   build-zig:
     name: Build
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout zig-debian
         uses: actions/checkout@v7
 
       - name: Build zig Debian
-        run: ./build_zig_debian.sh ${{ inputs.zig_version }} ${{ inputs.build_version }}
+        run: ./build_zig_debian.sh ${{ inputs.zig_version }}
 
       - name: Build zig Ubuntu
-        run: ./build_zig_ubuntu.sh ${{ inputs.zig_version }} ${{ inputs.build_version }}
-      
+        run: ./build_zig_ubuntu.sh ${{ inputs.zig_version }}
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
@@ -55,7 +51,7 @@ jobs:
           generate_release_notes: false
           make_latest: true
           files: zig-master_*.deb
-          name: Zig ${{ inputs.zig_version }}+${{ inputs.build_version }}
-          tag_name: ${{ inputs.zig_version }}-${{ inputs.build_version }}
+          name: Zig ${{ inputs.zig_version }}
+          tag_name: ${{ inputs.zig_version }}
           fail_on_unmatched_files: true
-          
+
